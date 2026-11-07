@@ -982,7 +982,7 @@ dependencies = [
 
 [[package]]
 name = "nm-openvpn-sso"
-version = "0.3.1"
+version = "0.3.1+dr0ps1"
 dependencies = [
  "anyhow",
  "axum",

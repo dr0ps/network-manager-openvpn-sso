@@ -1,12 +1,12 @@
 [package]
 name = "nm-openvpn-sso"
-version = "0.3.1"
+version = "0.3.1+dr0ps1"
 edition = "2021"
 authors = ["Joseph R. Quinn <quinn.josephr@protonmail.com>"]
 license = "MIT"
 description = "NetworkManager VPN plugin for OpenVPN with SSO/OAuth authentication"
-repository = "https://github.com/quinnjr/network-manager-openvpn-sso"
-homepage = "https://github.com/quinnjr/network-manager-openvpn-sso"
+repository = "https://github.com/dr0ps/network-manager-openvpn-sso"
+homepage = "https://github.com/dr0ps/network-manager-openvpn-sso"
 keywords = ["networkmanager", "openvpn", "sso", "oauth", "vpn"]
 categories = ["network-programming", "authentication"]
 
@@ -59,7 +59,7 @@ strip = true
 # Debian package configuration (cargo-deb)
 [package.metadata.deb]
 name = "networkmanager-openvpn-sso"
-maintainer = "Joseph R. Quinn <quinn.josephr@protonmail.com>"
+maintainer = "dr0ps <32899886+dr0ps@users.noreply.github.com>"
 copyright = "2026, Joseph R. Quinn"
 license-file = ["LICENSE", "0"]
 extended-description = """\

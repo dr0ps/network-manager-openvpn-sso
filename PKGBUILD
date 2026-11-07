@@ -1,10 +1,11 @@
-# Maintainer: Joseph R. Quinn <quinn.josephr@protonmail.com>
+# Maintainer: dr0ps <32899886+dr0ps@users.noreply.github.com>
+# Contributor: Joseph R. Quinn <quinn.josephr@protonmail.com>
 pkgname=networkmanager-openvpn-sso
-pkgver=0.3.1
+pkgver=0.3.1+dr0ps1
 pkgrel=1
 pkgdesc="NetworkManager VPN plugin for OpenVPN with SSO/OAuth authentication"
 arch=('x86_64')
-url="https://github.com/quinnjr/network-manager-openvpn-sso"
+url="https://github.com/dr0ps/network-manager-openvpn-sso"
 license=('MIT')
 depends=('networkmanager' 'openvpn' 'dbus')
 makedepends=('cargo' 'rust' 'extra-cmake-modules' 'qt6-base' 'networkmanager-qt' 'kio' 'ki18n' 'kcoreaddons')
