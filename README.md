@@ -91,6 +91,13 @@ On KDE Plasma you can enter it in the **Username** field of the connection setti
 
 The VPN connection will appear in your system's network settings and can be activated from there. When connecting, your browser will open for authentication.
 
+There is no GNOME connection editor for this plugin yet. Opening the connection's settings in GNOME Settings or nm-connection-editor only shows the name field and "Error: unable to load VPN connection editor". Don't save the connection from that dialog. Change its settings with nmcli instead, for example:
+
+```bash
+nmcli connection show "your-vpn-name" | grep vpn.data
+nmcli connection modify "your-vpn-name" +vpn.data username=your-username
+```
+
 #### KDE Plasma
 
 This project includes a native **plasma-nm UI plugin** that integrates directly with KDE Plasma's network applet. When installed, you can:
