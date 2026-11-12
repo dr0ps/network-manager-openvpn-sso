@@ -430,16 +430,34 @@ impl OpenVpnManager {
                             "Sending initial placeholder credentials to initiate TLS handshake..."
                         );
 
-                        // Send placeholder credentials - the server should respond with SSO challenge
-                        // Use credentials from NM config or default "oauth"
-                        let username = self.config.username.as_deref().unwrap_or("oauth");
+                        // The server answers these with the SSO challenge. OpenVPN
+                        // sends the username again with the session token at every
+                        // renegotiation, so it must be the real account name on
+                        // servers that bind the token to it.
+                        let username = self
+                            .config
+                            .username
+                            .as_deref()
+                            .unwrap_or(PLACEHOLDER_USERNAME);
+                        if self.config.username.is_none() {
+                            info!(
+                                "No username configured, sending placeholder \"{}\"",
+                                PLACEHOLDER_USERNAME
+                            );
+                        }
                         let password = self.config.password.as_deref().unwrap_or("oauth");
 
                         writer
-                            .write_all(format!("username \"Auth\" \"{}\"\n", username).as_bytes())
+                            .write_all(
+                                format!("username \"Auth\" {}\n", quote_mgmt_arg(username))
+                                    .as_bytes(),
+                            )
                             .await?;
                         writer
-                            .write_all(format!("password \"Auth\" \"{}\"\n", password).as_bytes())
+                            .write_all(
+                                format!("password \"Auth\" {}\n", quote_mgmt_arg(password))
+                                    .as_bytes(),
+                            )
                             .await?;
                         writer.flush().await?;
 
@@ -714,10 +732,11 @@ impl OpenVpnManager {
                     {
                         // Reconnecting would only resend the rejected token;
                         // the user has to log in again in the browser.
-                        return Err(anyhow!(
-                            "The server ended the VPN session ({}); connect again to log in",
-                            reason
-                        ));
+                        return Err(anyhow!(session_ended_message(
+                            reason,
+                            self.config.username.is_some(),
+                            &self.config.id,
+                        )));
                     }
                     info!("Releasing hold so OpenVPN reconnects");
                     writer.write_all(b"hold release\n").await?;
@@ -866,6 +885,48 @@ impl OpenVpnManager {
             false
         }
     }
+}
+
+/// Username sent when the connection has none configured.
+const PLACEHOLDER_USERNAME: &str = "oauth";
+
+/// Quote a value for a management interface command such as
+/// `username "Auth" <value>`: OpenVPN unescapes backslashes and double quotes
+/// inside a double-quoted argument.
+fn quote_mgmt_arg(value: &str) -> String {
+    let mut quoted = String::with_capacity(value.len() + 2);
+    quoted.push('"');
+    for c in value.chars() {
+        if c == '"' || c == '\\' {
+            quoted.push('\\');
+        }
+        quoted.push(c);
+    }
+    quoted.push('"');
+    quoted
+}
+
+/// Error reported when the server rejects the session credentials on a
+/// running connection.
+///
+/// OpenVPN resends the username with the session token at every
+/// renegotiation (about once an hour). Servers that bind the token to the
+/// account name reject it when the username is the placeholder, so without a
+/// configured username that is the likely cause.
+fn session_ended_message(reason: &str, username_configured: bool, connection_id: &str) -> String {
+    let mut message = format!(
+        "The server ended the VPN session ({}); connect again to log in",
+        reason
+    );
+    if !username_configured && reason.contains("auth-token") {
+        message.push_str(&format!(
+            ". No username is set for this connection. If the session keeps ending \
+             about an hour after connecting, set your VPN username: \
+             nmcli connection modify \"{}\" +vpn.data username=<your-username>",
+            connection_id
+        ));
+    }
+    message
 }
 
 /// Whether OpenVPN restarted the connection because the server rejected our
@@ -1157,6 +1218,40 @@ mod tests {
         assert!(needs_new_login("auth-failure"));
         assert!(!needs_new_login("ping-restart"));
         assert!(!needs_new_login("connection-reset"));
+    }
+
+    // -- session_ended_message ----------------------------------------------
+
+    #[test]
+    fn session_ended_message_suggests_username_when_none_is_set() {
+        let msg = session_ended_message("auth-failure (auth-token)", false, "work vpn");
+        assert!(msg.starts_with("The server ended the VPN session (auth-failure (auth-token))"));
+        assert!(msg.contains("nmcli connection modify \"work vpn\" +vpn.data username="));
+    }
+
+    #[test]
+    fn session_ended_message_without_hint_when_username_is_set() {
+        assert_eq!(
+            session_ended_message("auth-failure (auth-token)", true, "work vpn"),
+            "The server ended the VPN session (auth-failure (auth-token)); connect again to log in"
+        );
+    }
+
+    #[test]
+    fn session_ended_message_without_hint_for_other_failures() {
+        assert!(!session_ended_message("auth-failure", false, "work vpn").contains("nmcli"));
+    }
+
+    // -- quote_mgmt_arg -----------------------------------------------------
+
+    #[test]
+    fn quote_mgmt_arg_quotes_plain_value() {
+        assert_eq!(quote_mgmt_arg("ebert"), "\"ebert\"");
+    }
+
+    #[test]
+    fn quote_mgmt_arg_escapes_quotes_and_backslashes() {
+        assert_eq!(quote_mgmt_arg(r#"a"b\c"#), r#""a\"b\\c""#);
     }
 
     // -- extract_open_url ---------------------------------------------------

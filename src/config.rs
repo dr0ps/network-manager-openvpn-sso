@@ -24,7 +24,12 @@ pub struct ConnectionConfig {
     pub port: Option<u16>,
     /// Optional protocol override (udp/tcp)
     pub protocol: Option<String>,
-    /// Username for initial auth (placeholder for SSO)
+    /// VPN account username (from vpn.data "username").
+    ///
+    /// Servers that bind their session token to the account name (e.g.
+    /// openvpn-auth-oauth2 replacing the username with the SSO identity)
+    /// reject the token at the hourly renegotiation unless the client sends
+    /// that same name. Without it, a placeholder is sent.
     pub username: Option<String>,
     /// Password for initial auth (placeholder for SSO)
     pub password: Option<String>,
@@ -101,7 +106,10 @@ impl ConnectionConfig {
         let remote = vpn_data.get("remote").cloned();
         let port = vpn_data.get("port").and_then(|p| p.parse().ok());
         let protocol = vpn_data.get("proto").cloned();
-        let username = vpn_data.get("username").cloned();
+        let username = vpn_data
+            .get("username")
+            .map(|u| u.trim().to_string())
+            .filter(|u| !u.is_empty());
 
         // Get secrets section for password
         let vpn_secrets = get_string_dict(vpn, "secrets").unwrap_or_default();
@@ -407,6 +415,36 @@ mod tests {
             err.contains("Missing 'connection' settings section"),
             "unexpected error message: {err}"
         );
+    }
+
+    #[test]
+    fn from_nm_settings_reads_trimmed_username() {
+        let connection = connection_section("44444444-4444-4444-4444-444444444444", "Work");
+        let vpn = vpn_section(&[
+            ("config", "/etc/openvpn/client/test.ovpn"),
+            ("username", "  ebert "),
+        ]);
+        let mut settings = HashMap::new();
+        settings.insert("connection".to_string(), connection);
+        settings.insert("vpn".to_string(), vpn);
+
+        let config = ConnectionConfig::from_nm_settings(&settings).unwrap();
+        assert_eq!(config.username, Some("ebert".to_string()));
+    }
+
+    #[test]
+    fn from_nm_settings_ignores_blank_username() {
+        let connection = connection_section("55555555-5555-5555-5555-555555555555", "Work");
+        let vpn = vpn_section(&[
+            ("config", "/etc/openvpn/client/test.ovpn"),
+            ("username", "   "),
+        ]);
+        let mut settings = HashMap::new();
+        settings.insert("connection".to_string(), connection);
+        settings.insert("vpn".to_string(), vpn);
+
+        let config = ConnectionConfig::from_nm_settings(&settings).unwrap();
+        assert_eq!(config.username, None);
     }
 
     #[test]
