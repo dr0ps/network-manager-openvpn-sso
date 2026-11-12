@@ -8,8 +8,10 @@ arch=('x86_64')
 url="https://github.com/dr0ps/network-manager-openvpn-sso"
 license=('MIT')
 depends=('networkmanager' 'openvpn' 'dbus')
-makedepends=('cargo' 'rust' 'extra-cmake-modules' 'qt6-base' 'networkmanager-qt' 'kio' 'ki18n' 'kcoreaddons')
-optdepends=('plasma-nm: KDE Plasma network manager integration')
+makedepends=('cargo' 'rust' 'libnm' 'gtk3' 'gtk4' 'extra-cmake-modules' 'qt6-base' 'networkmanager-qt' 'kio' 'ki18n' 'kcoreaddons')
+optdepends=('plasma-nm: KDE Plasma network manager integration'
+            'gtk4: connection editor in GNOME Settings'
+            'gtk3: connection editor in nm-connection-editor')
 provides=('networkmanager-openvpn-sso')
 conflicts=('networkmanager-openvpn-sso-git')
 # !lto: makepkg's -flto CFLAGS produce GCC bitcode objects for ring's C code
@@ -21,6 +23,9 @@ sha256sums=()
 build() {
     cd "$startdir"
     cargo build --release --locked
+
+    # GNOME Settings (GTK 4) and nm-connection-editor (GTK 3) connection editor
+    make -C gnome-nm-plugin
 
     # Build plasma-nm plugin if plasma-nm and KDE dependencies are available
     if pkg-config --exists "KF6NetworkManagerQt" && [[ -f /usr/lib/libplasmanm_editor.so ]]; then
@@ -35,6 +40,10 @@ package() {
     # Install binary (same location pattern as nm-openvpn-service)
     install -Dm755 "target/release/nm-openvpn-sso-service" \
         "$pkgdir/usr/lib/nm-openvpn-sso-service"
+
+    # Install the VPN auth dialog (referenced by the .name file)
+    install -Dm755 "data/nm-openvpn-sso-auth-dialog.sh" \
+        "$pkgdir/usr/lib/nm-openvpn-sso-auth-dialog"
 
     # Install NetworkManager VPN plugin name file
     install -Dm644 "data/nm-openvpn-sso-service.name" \
@@ -51,6 +60,9 @@ package() {
     # Install desktop entry
     install -Dm644 "data/vpn-sso-connect.desktop" \
         "$pkgdir/usr/share/applications/vpn-sso-connect.desktop"
+
+    # Install the GNOME connection editor (path referenced by the .name file)
+    make -C gnome-nm-plugin install DESTDIR="$pkgdir" PLUGINDIR=/usr/lib/NetworkManager
 
     # Install plasma-nm plugin if built
     if [[ -f "plasma-nm-plugin/build/plasmanetworkmanagement_openvpnssoui.so" ]]; then

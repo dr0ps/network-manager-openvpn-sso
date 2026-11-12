@@ -83,7 +83,7 @@ If that happens, set the username you log in with:
 nmcli connection modify "your-vpn-name" +vpn.data username=your-username
 ```
 
-On KDE Plasma you can enter it in the **Username** field of the connection settings instead.
+In GNOME Settings, nm-connection-editor and the KDE Plasma network settings you can enter it in the **Username** field of the connection settings instead.
 
 ### Using with Network Manager GUI
 
@@ -91,12 +91,7 @@ On KDE Plasma you can enter it in the **Username** field of the connection setti
 
 The VPN connection will appear in your system's network settings and can be activated from there. When connecting, your browser will open for authentication.
 
-There is no GNOME connection editor for this plugin yet. Opening the connection's settings in GNOME Settings or nm-connection-editor only shows the name field and "Error: unable to load VPN connection editor". Don't save the connection from that dialog. Change its settings with nmcli instead, for example:
-
-```bash
-nmcli connection show "your-vpn-name" | grep vpn.data
-nmcli connection modify "your-vpn-name" +vpn.data username=your-username
-```
+The connection settings in GNOME Settings and nm-connection-editor show the plugin's own editor with the username, the configuration file and optional gateway, port and protocol overrides. Saving keeps any other settings of the connection, such as ones set with nmcli.
 
 #### KDE Plasma
 
@@ -129,14 +124,21 @@ The plugin is built automatically during installation if KDE dependencies are av
 # Arch Linux
 sudo pacman -S rust cargo dbus openssl pkgconf
 
+# For the GNOME connection editor
+sudo pacman -S libnm gtk3 gtk4
+
 # For KDE Plasma integration (optional)
 sudo pacman -S extra-cmake-modules qt6-base networkmanager-qt kio ki18n kcoreaddons plasma-nm
 
 # Debian/Ubuntu
 sudo apt-get install rustc cargo libdbus-1-dev libssl-dev pkg-config
+# For the GNOME connection editor
+sudo apt-get install libnm-dev libgtk-3-dev libgtk-4-dev
 
 # Fedora
 sudo dnf install rust cargo dbus-devel openssl-devel pkg-config
+# For the GNOME connection editor
+sudo dnf install NetworkManager-libnm-devel gtk3-devel gtk4-devel
 ```
 
 ### Build

@@ -61,6 +61,9 @@ install -m 755 "$BINARY" "$NM_PLUGIN_DIR/nm-openvpn-sso-service"
 # Older versions cached session tokens here; nothing uses them anymore
 rm -rf /var/lib/nm-openvpn-sso
 
+# Install the VPN auth dialog (referenced by the .name file)
+install -m 755 data/nm-openvpn-sso-auth-dialog.sh "$NM_PLUGIN_DIR/nm-openvpn-sso-auth-dialog"
+
 # Install NetworkManager plugin file
 info "Installing NetworkManager plugin configuration..."
 install -m 644 data/nm-openvpn-sso-service.name "$NM_VPN_DIR/"
@@ -96,6 +99,22 @@ else
     warn "KDE Plasma users: install extra-cmake-modules, qt6-base, networkmanager-qt, kio, ki18n, kcoreaddons, plasma-nm and re-run."
 fi
 
+# Build and install the GNOME connection editor if its dependencies are available
+GNOME_INSTALLED=false
+if command -v make &> /dev/null && pkg-config --exists libnm gtk+-3.0 gtk4 2>/dev/null; then
+    info "Building GNOME connection editor..."
+    if make -C gnome-nm-plugin >/dev/null; then
+        make -C gnome-nm-plugin install PLUGINDIR="$PREFIX/lib/NetworkManager" >/dev/null
+        info "GNOME connection editor installed."
+        GNOME_INSTALLED=true
+    else
+        warn "Failed to build the GNOME connection editor (use nmcli to edit connections)."
+    fi
+else
+    warn "libnm, GTK 3 or GTK 4 development files not found - skipping the GNOME connection editor."
+    warn "GNOME users: install libnm-dev, libgtk-3-dev and libgtk-4-dev (or your distribution's equivalents) and re-run."
+fi
+
 # Reload daemons
 info "Reloading system daemons..."
 dbus-send --system --type=method_call --dest=org.freedesktop.DBus \
@@ -120,6 +139,11 @@ echo "To connect:"
 echo "  nmcli connection up \"connection-name\""
 echo ""
 echo "Or use the 'VPN SSO Connect' app from your application menu."
+if [[ "$GNOME_INSTALLED" != "true" ]]; then
+    echo ""
+    echo "Note: GNOME Settings shows 'unable to load VPN connection editor' for these"
+    echo "connections. Install the GNOME development files and re-run, or use nmcli."
+fi
 if [[ "$PLASMA_INSTALLED" != "true" ]]; then
     echo ""
     echo "Note: KDE Plasma users may see 'missing support' in the network applet."

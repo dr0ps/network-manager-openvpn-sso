@@ -3,3 +3,15 @@ name=openvpn-sso
 service=org.freedesktop.NetworkManager.openvpn-sso
 program=/usr/lib/nm-openvpn-sso-service
 supports-multiple-connections=false
+
+[libnm]
+# Connection editor for GNOME Settings and nm-connection-editor
+# (gnome-nm-plugin/). Absolute, because the distribution's NetworkManager
+# plugin directory differs (lib, lib64, lib/<multiarch>).
+plugin=/usr/lib/NetworkManager/libnm-vpn-plugin-openvpn-sso.so
+
+[GNOME]
+# Answers secret requests (the connection has none). GNOME Shell needs it
+# before GNOME Settings can open the connection editor.
+auth-dialog=/usr/lib/nm-openvpn-sso-auth-dialog
+supports-external-ui-mode=true

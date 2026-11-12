@@ -23,11 +23,15 @@ SYSCONFDIR="${SYSCONFDIR:-/etc}"
 
 info "Removing files..."
 rm -f "$LIBDIR/nm-openvpn-sso-service"
+rm -f "$LIBDIR/nm-openvpn-sso-auth-dialog"
 rm -f "$LIBDIR/NetworkManager/VPN/nm-openvpn-sso-service.name"
 rm -f "$PREFIX/share/dbus-1/system.d/org.freedesktop.NetworkManager.openvpn-sso.conf"
 rm -f "$PREFIX/bin/vpn-sso-connect"
 rm -f "$PREFIX/share/applications/vpn-sso-connect.desktop"
 rm -f "$LIBDIR/qt6/plugins/plasma/network/vpn/plasmanetworkmanagement_openvpnssoui.so"
+rm -f "$PREFIX/lib/NetworkManager/libnm-vpn-plugin-openvpn-sso.so"
+rm -f "$PREFIX/lib/NetworkManager/libnm-vpn-plugin-openvpn-sso-editor.so"
+rm -f "$PREFIX/lib/NetworkManager/libnm-gtk4-vpn-plugin-openvpn-sso-editor.so"
 rm -rf /var/lib/nm-openvpn-sso
 
 info "Reloading daemons..."

@@ -186,6 +186,29 @@ jobs:
       - name: Build plasma-nm plugin
         run: cmake --build plasma-nm-plugin/build
 
+  gnome-plugin:
+    name: GNOME Editor Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install GNOME build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libnm-dev \
+            libgtk-3-dev \
+            libgtk-4-dev \
+            xvfb
+
+      - name: Build GNOME connection editor
+        run: make -C gnome-nm-plugin CFLAGS="-O2 -g -Werror"
+
+      - name: Test GNOME connection editor
+        run: xvfb-run -a make -C gnome-nm-plugin check
+
   security-audit:
     name: Security Audit
     runs-on: ubuntu-latest
