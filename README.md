@@ -73,6 +73,18 @@ nmcli connection up "your-vpn-name"
 
 Your default browser will open for SSO authentication. After successful login, the VPN connection will be established automatically.
 
+### Setting your VPN username
+
+About once an hour the server renegotiates the connection, and OpenVPN sends the username together with the session token it got after the browser login. Some servers (for example [openvpn-auth-oauth2](https://github.com/jkroepke/openvpn-auth-oauth2) with the username taken from the SSO identity) only accept the token together with your real account name. Without a configured username the plugin sends the placeholder `oauth`. The server then rejects the token and the session ends about an hour after connecting with `auth-failure (auth-token)`.
+
+If that happens, set the username you log in with:
+
+```bash
+nmcli connection modify "your-vpn-name" +vpn.data username=your-username
+```
+
+On KDE Plasma you can enter it in the **Username** field of the connection settings instead.
+
 ### Using with Network Manager GUI
 
 #### GNOME

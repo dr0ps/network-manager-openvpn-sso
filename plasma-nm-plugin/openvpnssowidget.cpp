@@ -48,6 +48,9 @@ void OpenVpnSsoSettingWidget::loadConfig(const NetworkManager::Setting::Ptr &set
         m_ui->configPath->setUrl(QUrl::fromLocalFile(configPath));
     }
 
+    // VPN account username
+    m_ui->username->setText(data.value(QStringLiteral("username")));
+
     // Gateway / remote override
     const QString remote = data.value(QStringLiteral("remote"));
     if (!remote.isEmpty()) {
@@ -76,6 +79,14 @@ QVariantMap OpenVpnSsoSettingWidget::setting() const
     const QUrl configUrl = m_ui->configPath->url();
     if (configUrl.isValid()) {
         data.insert(QStringLiteral("config"), configUrl.toLocalFile());
+    }
+
+    // VPN account username (optional). OpenVPN resends it with the session
+    // token at every renegotiation; servers that bind the token to the account
+    // name end the session if it differs.
+    const QString username = m_ui->username->text().trimmed();
+    if (!username.isEmpty()) {
+        data.insert(QStringLiteral("username"), username);
     }
 
     // Gateway override (optional)
