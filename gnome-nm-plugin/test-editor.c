@@ -288,6 +288,11 @@ main(int argc, char **argv)
     int fd;
     int result;
 
+    /* Without an accessibility bus (CI) GTK warns, and GLib tests abort on
+     * warnings. The tests don't need accessibility. */
+    g_setenv("GTK_A11Y", "none", TRUE);  /* GTK 4 */
+    g_setenv("NO_AT_BRIDGE", "1", TRUE); /* GTK 3 */
+
 #if GTK_CHECK_VERSION(4, 0, 0)
     gtk_init();
 #else
