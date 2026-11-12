@@ -1,7 +1,7 @@
 # Maintainer: dr0ps <32899886+dr0ps@users.noreply.github.com>
 # Contributor: Joseph R. Quinn <quinn.josephr@protonmail.com>
 pkgname=networkmanager-openvpn-sso
-pkgver=0.3.1+dr0ps1
+pkgver=0.3.1+dr0ps2
 pkgrel=1
 pkgdesc="NetworkManager VPN plugin for OpenVPN with SSO/OAuth authentication"
 arch=('x86_64')
